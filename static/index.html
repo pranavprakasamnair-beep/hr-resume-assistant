@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HR Resume Selection Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0e1316;
+    --panel: #161e23;
+    --panel-2: #1c262c;
+    --line: #263139;
+    --line-soft: #1f292f;
+    --text: #e7edf0;
+    --muted: #8a9aa2;
+    --accent: #4fb0a5;
+    --accent-dim: rgba(79,176,165,0.15);
+    --warn: #d99a4f;
+    --danger: #d9776a;
+    --ai: #9b8cf0;
+    --font-display: 'Space Grotesk', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; }
+  ::selection { background: var(--accent); color: #06110f; }
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    background:
+      radial-gradient(1100px 500px at 15% -10%, rgba(79,176,165,0.06), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(155,140,240,0.05), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: var(--font-display); }
+
+  header {
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    justify-content: space-between;
+    background: rgba(14,19,22,0.7);
+    backdrop-filter: blur(6px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header .titles { display: flex; align-items: center; gap: 12px; }
+  .logo-mark { flex-shrink: 0; display: block; }
+  .logo-mark circle:first-child { fill: var(--accent); opacity: 0.85; }
+  .logo-mark circle:last-child { fill: var(--ai); opacity: 0.85; mix-blend-mode: screen; }
+  header h1 {
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    margin: 0;
+    font-weight: 600;
+  }
+  header .tag {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    display: block;
+    margin-top: 2px;
+  }
+  header .who {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  header .who button {
+    margin-left: 2px;
+  }
+  .disclaimer {
+    background: var(--panel-2);
+    border-left: 3px solid var(--warn);
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin: 18px 28px;
+    border-radius: 3px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .hidden { display: none !important; }
+
+  .view-enter { animation: viewFade 0.35s ease both; }
+  @keyframes viewFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- LOGIN SCREEN --- */
+  .login-wrap {
+    max-width: 640px;
+    margin: 90px auto;
+    text-align: center;
+    padding: 0 20px;
+  }
+  .login-wrap h2 { font-size: 24px; margin-bottom: 6px; font-weight: 600; letter-spacing: -0.01em; }
+  .login-wrap p.sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  .role-cards { display: flex; gap: 18px; }
+  .role-card {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 30px 22px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .role-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px -18px rgba(79,176,165,0.5);
+  }
+  .role-card:active { transform: translateY(-1px); }
+  .role-card h3 { margin: 14px 0 6px; font-size: 16px; font-weight: 600; }
+  .role-card p { color: var(--muted); font-size: 13px; margin: 0; line-height: 1.5; }
+  .role-icon {
+    font-size: 26px;
+    width: 54px; height: 54px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+  }
+
+  /* --- shared layout --- */
+  .layout { display: flex; gap: 20px; padding: 0 28px 40px; }
+  .col-left { width: 300px; flex-shrink: 0; }
+  .col-right { flex: 1; min-width: 0; }
+  select, input[type=text], input[type=password], textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+  input[type=file] {
+    width: 100%;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  input[type=file]::file-selector-button {
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    margin-right: 10px;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  input[type=file]::file-selector-button:hover { border-color: var(--accent); color: var(--accent); }
+  label.field-label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 14px 0 6px;
+    font-weight: 600;
+  }
+  label.field-label:first-child { margin-top: 0; }
+  .panel-box {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .job-detail { margin-top: 14px; font-size: 13px; }
+  .job-detail .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 10px; font-weight: 600; }
+  .stats { margin-top: 14px; font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+
+  /* --- candidate cards --- */
+  .candidate {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+    animation: cardIn 0.3s ease both;
+  }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .candidate:hover { border-color: #33424a; }
+  .candidate.is-applicant { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-dim); }
+  .candidate-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .alias { font-weight: 600; font-size: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+
+  /* score ring (signature element) */
+  .score-ring { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
+  .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+  .score-ring .ring-bg { fill: none; stroke: var(--line); stroke-width: 5; }
+  .score-ring .ring-fg { fill: none; stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 0.9s cubic-bezier(.4,0,.2,1); }
+  .score-ring .ring-value {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-weight: 600; font-size: 15px;
+  }
+
+  .confidence, .badge {
+    font-size: 10.5px;
+    padding: 3px 9px;
+    border-radius: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .conf-High { background: rgba(79,176,165,0.18); color: var(--accent); }
+  .conf-Medium { background: rgba(217,154,79,0.18); color: var(--warn); }
+  .conf-Low { background: rgba(217,119,106,0.18); color: var(--danger); }
+  .badge.applicant { background: rgba(79,176,165,0.22); color: var(--accent); }
+  .badge.sample { background: rgba(143,160,168,0.14); color: var(--muted); }
+  .badge.exp-meets { background: rgba(79,176,165,0.18); color: var(--accent); }
+  .badge.exp-below { background: rgba(217,119,106,0.18); color: var(--danger); }
+  .skills-row { margin-top: 10px; font-size: 13px; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+  .skills-row .label { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px; font-weight: 600; }
+  .skill-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--panel-2);
+    padding: 3px 9px 3px 7px;
+    border-radius: 10px;
+    font-size: 11.5px;
+    border: 1px solid var(--line-soft);
+  }
+  .skill-chip::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .skill-chip.missing { color: var(--danger); }
+  .skill-chip.missing::before { background: var(--danger); }
+  .skill-chip.matched { color: var(--accent); }
+  .skill-chip.matched::before { background: var(--accent); }
+  .evidence {
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--muted);
+    background: var(--bg);
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px dashed var(--line);
+    line-height: 1.55;
+  }
+  .actions { margin-top: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  button {
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+  button:active { transform: scale(0.97); }
+  button.primary { border-color: var(--accent); color: var(--accent); }
+  button.primary:hover { background: var(--accent-dim); }
+  button.shortlist:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  button.hold:hover { border-color: var(--warn); color: var(--warn); background: rgba(217,154,79,0.1); }
+  button.reject:hover { border-color: var(--danger); color: var(--danger); background: rgba(217,119,106,0.1); }
+  .action-status { font-size: 11.5px; color: var(--muted); margin-left: 4px; }
+  .ai-summary-btn { border-color: rgba(155,140,240,0.5); color: var(--ai); }
+  .ai-summary-btn:hover { background: rgba(155,140,240,0.15); border-color: var(--ai); }
+  .ai-summary-box:empty { display: none; }
+  .ai-summary-text {
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: var(--text);
+    background: rgba(155,140,240,0.08);
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(155,140,240,0.3);
+    line-height: 1.55;
+    animation: cardIn 0.25s ease both;
+  }
+  .ai-summary-text.loading { color: var(--muted); font-style: italic; }
+  .ai-summary-text.err { color: var(--danger); border-color: rgba(217,119,106,0.4); background: rgba(217,119,106,0.08); }
+  .feedback-card {
+    margin-top: 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px;
+    animation: cardIn 0.3s ease both;
+  }
+  .feedback-score-row { display: flex; align-items: center; gap: 14px; }
+  .feedback-score-label { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: 600; }
+  .feedback-suggestions {
+    margin-top: 14px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    white-space: pre-line;
+    background: rgba(155,140,240,0.08);
+    border: 1px solid rgba(155,140,240,0.3);
+    border-radius: 6px;
+    padding: 14px;
+  }
+  .feedback-tag { font-size: 11px; color: var(--muted); margin-top: 10px; }
+  .token-footer { padding: 14px 28px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); font-family: var(--font-mono); }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 18px;
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    margin-bottom: -1px;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-color: var(--accent); }
+
+  .status-msg { font-size: 13px; margin-top: 12px; padding: 10px 12px; border-radius: 6px; animation: cardIn 0.25s ease both; }
+  .status-msg.ok { background: rgba(79,176,165,0.15); color: var(--accent); }
+  .status-msg.err { background: rgba(217,119,106,0.15); color: var(--danger); }
+
+  @media (max-width: 720px) {
+    .layout { flex-direction: column; padding: 0 16px 32px; }
+    .col-left { width: 100%; }
+    .role-cards { flex-direction: column; }
+    header, .disclaimer { margin-left: 16px; margin-right: 16px; }
+    .disclaimer { margin-left: 0; margin-right: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 320px;
+    padding: 15px 20px;
+    border-radius: 10px;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    display: none;
+    z-index: 9999;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    animation: slideIn 0.3s ease;
+}
+
+.toast.success {
+    background: #28a745;
+}
+
+.toast.error {
+    background: #dc3545;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titles">
+    <svg class="logo-mark" width="30" height="30" viewBox="0 0 30 30">
+      <circle cx="12" cy="15" r="9"/>
+      <circle cx="18" cy="15" r="9"/>
+    </svg>
+    <div>
+      <h1>HR Resume Selection Assistant</h1>
+      <span class="tag">recruiter support tool — not an autonomous decision system</span>
+    </div>
+  </div>
+  <div class="who hidden" id="whoBox">
+    <span id="whoLabel"></span>
+    <button id="logoutBtn">Switch role</button>
+  </div>
+</header>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="view-login" class="login-wrap view-enter">
+  <h2>Who's using this today?</h2>
+  <p class="sub">This just picks which screen you see — no password needed for this demo.</p>
+  <div class="role-cards">
+    <div class="role-card" id="chooseUser">
+      <div class="role-icon">🧑‍💼</div>
+      <h3>I'm looking for a job</h3>
+      <p>Pick a job title and upload your resume.</p>
+    </div>
+    <div class="role-card" id="chooseRecruiter">
+      <div class="role-icon">🗂️</div>
+      <h3>I'm hiring</h3>
+      <p>Post a job description and review ranked candidates.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ RECRUITER AUTH SCREEN ============ -->
+<div id="view-recruiter-auth" class="hidden">
+  <div class="login-wrap">
+    <h2>Recruiter Login</h2>
+    <p class="sub">Enter your employee ID and password to review candidates.</p>
+    <div class="panel-box" style="text-align:left; max-width:360px; margin:0 auto;">
+      <label class="field-label">Employee ID</label>
+      <input type="text" id="loginEmployeeId" placeholder="e.g. EMP001" autocomplete="username">
+      <label class="field-label">Password</label>
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+      <div style="margin-top:14px; display:flex; gap:8px;">
+        <button class="primary" id="loginSubmitBtn">Log in</button>
+        <button id="loginBackBtn">Back</button>
+      </div>
+      <div id="loginStatus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ USER (JOB SEEKER) VIEW ============ -->
+<div id="view-user" class="hidden">
+  <div class="disclaimer">
+    <span aria-hidden="true">ℹ️</span>
+    <span>Your resume will be matched against the job's required/preferred skills.
+    A human recruiter reviews every candidate — this tool does not accept or reject anyone automatically.</span>
+  </div>
+  <div class="layout">
+    <div class="col-left">
+      <div class="panel-box">
+        <label class="field-label">Select the job you're applying for</label>
+        <select id="userJobSelect"></select>
+        <div class="job-detail" id="userJobDetail"></div>
+      </div>
+    </div>
+    <div class="col-right">
+      <div class="panel-box">
+        <label class="field-label">Upload your resume (.txt, .pdf, or .docx)</label>
+        <input type="file" id="resumeFile" accept=".txt,.pdf,.docx">
+        <div style="margin-top:14px;">
+          <button class="primary" id="submitResumeBtn">Submit application</button>
+        </div>
+        <div id="uploadStatus"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ RECRUITER VIEW ============ -->
+<div id="view-recruiter" class="hidden">
+  <div class="tabs" style="margin-left:28px;">
+    <div class="tab-btn active" id="tabPost">Post a job</div>
+    <div class="tab-btn" id="tabReview">Review candidates</div>
+  </div>
+
+  <div id="recruiterPost" class="layout">
+    <div class="col-left">
+      <div class="panel-box">
+        <label class="field-label">Job title</label>
+        <input type="text" id="newJobTitle" placeholder="e.g. Backend Developer">
+        <label class="field-label">Required experience</label>
+        <select id="newJobExperience">
+          <option value="Any">Any (no requirement)</option>
+          <option value="0-1">0-1 years</option>
+          <option value="1-3">1-3 years</option>
+          <option value="3-5">3-5 years</option>
+          <option value="5-8">5-8 years</option>
+          <option value="8+">8+ years</option>
+        </select>
+        <label class="field-label">Job description</label>
+        <textarea id="newJobDesc" placeholder="Paste the job description here. Mention 'required skills:' and 'preferred skills:' for best results."></textarea>
+        <div style="margin-top:14px;">
+          <button class="primary" id="postJobBtn">Post job</button>
+        </div>
+        <div id="postJobStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="recruiterReview" class="layout hidden">
+    <div class="col-left">
+      <div class="panel-box">
+        <select id="jobSelect"></select>
+        <div class="job-detail" id="jobDetail"></div>
+      </div>
+      <div class="stats" id="statsBox"></div>
+    </div>
+    <div class="col-right" id="candidateList">
+      <p style="color: var(--muted);">Select a job to see ranked candidates.</p>
+    </div>
+  </div>
+</div>
+
+<div class="token-footer">
+  Scores come from transparent skill/text matching (TF-IDF similarity + skill overlap) — not a hiring decision.
+</div>
+
+<script>
+const API = "";
+let currentRole = null;
+let loggedInEmployee = null; // { employee_id, name } once authenticated
+
+// ---------- ROLE SWITCHING ----------
+function showView(id) {
+  ["view-login", "view-recruiter-auth", "view-user", "view-recruiter"].forEach(v => {
+    const el = document.getElementById(v);
+    el.classList.toggle("hidden", v !== id);
+  });
+  const shown = document.getElementById(id);
+  shown.classList.remove("view-enter");
+  void shown.offsetWidth; // restart animation
+  shown.classList.add("view-enter");
+}
+
+// score ring: small SVG progress circle used for match scores throughout.
+// Starts fully "empty" and is animated to the target value by animateRings().
+function scoreRing(score, size) {
+  size = size || 56;
+  const s = Math.max(0, Math.min(100, Math.round(score)));
+  const r = size / 2 - 5;
+  const c = 2 * Math.PI * r;
+  const color = s >= 70 ? "var(--accent)" : s >= 40 ? "var(--warn)" : "var(--danger)";
+  return `
+    <div class="score-ring" style="width:${size}px;height:${size}px;" title="Match score: ${s}/100">
+      <svg viewBox="0 0 ${size} ${size}">
+        <circle class="ring-bg" cx="${size / 2}" cy="${size / 2}" r="${r}"></circle>
+        <circle class="ring-fg" cx="${size / 2}" cy="${size / 2}" r="${r}"
+          data-offset="${c * (1 - s / 100)}"
+          style="stroke:${color}; stroke-dasharray:${c}; stroke-dashoffset:${c};"></circle>
+      </svg>
+      <span class="ring-value">${s}</span>
+    </div>
+  `;
+}
+
+// call after inserting scoreRing() markup into the DOM to animate the fill-in
+function animateRings(root) {
+  const circles = (root || document).querySelectorAll(".ring-fg");
+  requestAnimationFrame(() => {
+    circles.forEach(circle => {
+      circle.style.strokeDashoffset = circle.dataset.offset;
+    });
+  });
+}
+
+document.getElementById("chooseUser").addEventListener("click", () => {
+  currentRole = "user";
+  document.getElementById("whoBox").classList.remove("hidden");
+  document.getElementById("whoLabel").textContent = "Viewing as: Job Seeker";
+  showView("view-user");
+  loadJobsForUser();
+});
+
+document.getElementById("chooseRecruiter").addEventListener("click", () => {
+  document.getElementById("loginEmployeeId").value = "";
+  document.getElementById("loginPassword").value = "";
+  document.getElementById("loginStatus").innerHTML = "";
+  showView("view-recruiter-auth");
+  document.getElementById("loginEmployeeId").focus();
+});
+
+document.getElementById("loginBackBtn").addEventListener("click", () => {
+  showView("view-login");
+});
+
+async function attemptLogin() {
+  const employeeId = document.getElementById("loginEmployeeId").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const statusBox = document.getElementById("loginStatus");
+
+  if (!employeeId || !password) {
+    statusBox.innerHTML = `<div class="status-msg err">Please enter both employee ID and password.</div>`;
+    return;
+  }
+
+  statusBox.innerHTML = `<div class="status-msg ok">Checking credentials...</div>`;
+
+  const res = await fetch(`${API}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ employee_id: employeeId, password: password }),
+  });
+  const data = await res.json();
+
+  if (res.ok) {
+    loggedInEmployee = { employee_id: data.employee_id, name: data.name };
+    currentRole = "recruiter";
+    document.getElementById("whoBox").classList.remove("hidden");
+    document.getElementById("whoLabel").textContent =
+      `Viewing as: Recruiter (${data.name} · ${data.employee_id})`;
+    showView("view-recruiter");
+    loadJobsForRecruiter();
+  } else {
+    statusBox.innerHTML = `<div class="status-msg err">${data.error || "Login failed."}</div>`;
+  }
+}
+
+document.getElementById("loginSubmitBtn").addEventListener("click", attemptLogin);
+document.getElementById("loginPassword").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") attemptLogin();
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  currentRole = null;
+  loggedInEmployee = null;
+  document.getElementById("whoBox").classList.add("hidden");
+  showView("view-login");
+});
+
+// ---------- RECRUITER TABS ----------
+document.getElementById("tabPost").addEventListener("click", () => {
+  document.getElementById("tabPost").classList.add("active");
+  document.getElementById("tabReview").classList.remove("active");
+  document.getElementById("recruiterPost").classList.remove("hidden");
+  document.getElementById("recruiterReview").classList.add("hidden");
+});
+document.getElementById("tabReview").addEventListener("click", () => {
+  document.getElementById("tabReview").classList.add("active");
+  document.getElementById("tabPost").classList.remove("active");
+  document.getElementById("recruiterReview").classList.remove("hidden");
+  document.getElementById("recruiterPost").classList.add("hidden");
+  loadJobsForRecruiter();
+});
+
+// ---------- USER (JOB SEEKER) FLOW ----------
+async function loadJobsForUser() {
+  const res = await fetch(`${API}/jobs`);
+  const jobs = await res.json();
+  const select = document.getElementById("userJobSelect");
+  select.innerHTML = jobs.map(j => `<option value="${j.job_id}">${j.title}</option>`).join("");
+  select.addEventListener("change", () => showUserJobDetail(jobs, select.value));
+  if (jobs.length) showUserJobDetail(jobs, jobs[0].job_id);
+}
+
+function showUserJobDetail(jobs, jobId) {
+  const job = jobs.find(j => j.job_id === jobId);
+  if (!job) return;
+  document.getElementById("userJobDetail").innerHTML = `
+    <div class="label">Required experience</div>
+    <div>${job.required_experience || "Any"}</div>
+    <div class="label">Required skills</div>
+    <div>${job.required_skills}</div>
+    <div class="label">Preferred skills</div>
+    <div>${job.preferred_skills}</div>
+  `;
+}
+
+document.getElementById("submitResumeBtn").addEventListener("click", async () => {
+  const jobId = document.getElementById("userJobSelect").value;
+  const fileInput = document.getElementById("resumeFile");
+  const statusBox = document.getElementById("uploadStatus");
+
+  if (!fileInput.files.length) {
+    statusBox.innerHTML = `<div class="status-msg err">Please choose a resume file first.</div>`;
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("job_id", jobId);
+  formData.append("file", fileInput.files[0]);
+
+  statusBox.innerHTML = `<div class="status-msg ok">Submitting...</div>`;
+
+  const res = await fetch(`${API}/resumes/upload`, { method: "POST", body: formData });
+  const data = await res.json();
+
+  if (res.ok) {
+    statusBox.innerHTML = `<div class="status-msg ok">
+      Application submitted! Your reference ID is <strong>${data.candidate_alias}</strong>.<br>
+      Skills we detected: ${data.extracted_skills}
+    </div>`;
+    statusBox.innerHTML += renderFeedbackCard(data.feedback);
+    animateRings(statusBox);
+  } else {
+    statusBox.innerHTML = `<div class="status-msg err">${data.error || "Something went wrong."}</div>`;
+  }
+});
+
+function renderFeedbackCard(feedback) {
+  if (!feedback || feedback.match_score === null) {
+    return `<div class="feedback-card">${feedback ? feedback.suggestions : "No feedback available."}</div>`;
+  }
+
+  const matchedChips = feedback.matched_skills.map(s => `<span class="skill-chip matched">${s}</span>`).join("") || "<span style='font-size:12px;color:var(--muted);'>none</span>";
+  const missingChips = feedback.missing_skills.map(s => `<span class="skill-chip missing">${s}</span>`).join("") || "<span style='color: var(--accent); font-size:12px;'>none</span>";
+
+  const expBadge = feedback.required_experience && feedback.required_experience !== "Any"
+    ? `<span class="badge ${feedback.meets_experience ? 'exp-meets' : 'exp-below'}">Experience: ${feedback.experience_years_band || "Not specified"} ${feedback.meets_experience ? '✓ meets requirement' : '✗ below requirement'}</span>`
+    : "";
+
+  return `
+    <div class="feedback-card">
+      <div class="feedback-score-row">
+        ${scoreRing(feedback.match_score, 64)}
+        <div>
+          <div class="feedback-score-label">Your match score</div>
+          <span class="confidence conf-${feedback.confidence}">${feedback.confidence} confidence</span>
+          ${expBadge}
+        </div>
+      </div>
+
+      <div class="skills-row">
+        <span class="label">Matched</span>${matchedChips}
+      </div>
+      <div class="skills-row">
+        <span class="label">Missing (required)</span>${missingChips}
+      </div>
+
+      <div class="feedback-suggestions">${feedback.suggestions}</div>
+      <div class="feedback-tag">${feedback.ai_generated ? "✨ AI-generated suggestions" : "Rule-based suggestions (AI not configured)"}</div>
+    </div>
+  `;
+}
+
+// ---------- RECRUITER: POST A JOB ----------
+document.getElementById("postJobBtn").addEventListener("click", async () => {
+  const title = document.getElementById("newJobTitle").value.trim();
+  const desc = document.getElementById("newJobDesc").value.trim();
+  const requiredExperience = document.getElementById("newJobExperience").value;
+  const statusBox = document.getElementById("postJobStatus");
+
+  if (!title || !desc) {
+    statusBox.innerHTML = `<div class="status-msg err">Please fill in both the title and description.</div>`;
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("description", desc);
+  formData.append("required_experience", requiredExperience);
+
+  const res = await fetch(`${API}/jobs/create`, { method: "POST", body: formData });
+  const data = await res.json();
+
+  statusBox.innerHTML = `<div class="status-msg ok">
+    Job posted! ID: ${data.job_id}<br>
+    Required experience: ${data.required_experience}<br>
+    Detected required skills: ${data.required_skills.join(", ") || "(none detected — try mentioning specific skills)"}<br>
+    Detected preferred skills: ${data.preferred_skills.join(", ") || "(none detected)"}
+  </div>`;
+
+  document.getElementById("newJobTitle").value = "";
+  document.getElementById("newJobDesc").value = "";
+  document.getElementById("newJobExperience").value = "Any";
+});
+
+// ---------- RECRUITER: REVIEW CANDIDATES ----------
+async function loadJobsForRecruiter() {
+  const res = await fetch(`${API}/jobs`);
+  const jobs = await res.json();
+  const select = document.getElementById("jobSelect");
+  select.innerHTML = jobs.map(j => `<option value="${j.job_id}">${j.title} (${j.job_id})</option>`).join("");
+  select.onchange = () => loadShortlist(select.value);
+  if (jobs.length) loadShortlist(jobs[0].job_id);
+}
+
+async function loadShortlist(jobId) {
+  const list = document.getElementById("candidateList");
+  list.innerHTML = "<p style='color: var(--muted);'>Loading candidates...</p>";
+
+  const res = await fetch(`${API}/shortlist/${jobId}`);
+  const data = await res.json();
+
+  const job = data.job;
+  document.getElementById("jobDetail").innerHTML = `
+    <div><strong>${job.title}</strong></div>
+    <div class="label">Required experience</div>
+    <div>${job.required_experience || "Any"}</div>
+    <div class="label">Required skills</div>
+    <div>${job.required_skills}</div>
+    <div class="label">Preferred skills</div>
+    <div>${job.preferred_skills}</div>
+  `;
+
+  document.getElementById("statsBox").innerHTML =
+    `Showing top ${data.candidates.length} of ${data.total_candidates} candidates.<br>No automatic rejection is applied.`;
+
+  list.innerHTML = data.candidates.map(c => renderCandidate(c, jobId)).join("");
+  animateRings(list);
+
+  document.querySelectorAll("[data-action]").forEach(btn => {
+    btn.addEventListener("click", () => submitAction(btn.dataset.action, jobId, btn.dataset.resume));
+  });
+
+  document.querySelectorAll("[data-summary]").forEach(btn => {
+    btn.addEventListener("click", () => loadAiSummary(jobId, btn.dataset.summary));
+  });
+}
+
+function renderCandidate(c, jobId) {
+  const matchedChips = c.matched_skills.map(s => `<span class="skill-chip matched">${s}</span>`).join("");
+  const missingChips = c.missing_skills.map(s => `<span class="skill-chip missing">${s}</span>`).join("") || "<span style='color: var(--accent); font-size:12px;'>none</span>";
+
+  const prevAction = c.recruiter_action
+    ? `<span class="action-status">Last action: ${c.recruiter_action.action} by ${c.recruiter_action.user_alias} (${c.recruiter_action.timestamp})</span>`
+    : "";
+
+  const applicantBadge = c.is_applicant
+    ? `<span class="badge applicant">Applicant</span>`
+    : `<span class="badge sample">Sample pool</span>`;
+
+  const expBand = c.experience_years_band || "Not specified";
+  const expBadge = c.required_experience && c.required_experience !== "Any"
+    ? `<span class="badge ${c.meets_experience ? 'exp-meets' : 'exp-below'}">Experience: ${expBand} ${c.meets_experience ? '✓ meets requirement' : '✗ below requirement'}</span>`
+    : `<span class="badge sample">Experience: ${expBand}</span>`;
+
+  return `
+    <div class="candidate ${c.is_applicant ? 'is-applicant' : ''}">
+      <div class="candidate-head">
+        <div class="alias">${c.candidate_alias}
+          <span class="confidence conf-${c.confidence}">${c.confidence} confidence</span>
+          ${applicantBadge}
+        </div>
+        ${scoreRing(c.match_score)}
+      </div>
+
+      <div class="skills-row">
+        ${expBadge}
+      </div>
+      <div class="skills-row">
+        <span class="label">Matched</span>${matchedChips || "<span style='font-size:12px;color:var(--muted);'>none</span>"}
+      </div>
+      <div class="skills-row">
+        <span class="label">Missing (required)</span>${missingChips}
+      </div>
+
+      <div class="evidence">${c.redacted_text}</div>
+
+      <div class="ai-summary-box" id="aiSummary-${c.resume_id}"></div>
+
+      <div class="actions">
+        <button class="shortlist" data-action="Shortlist" data-resume="${c.resume_id}">Shortlist</button>
+        <button class="hold" data-action="Hold" data-resume="${c.resume_id}">Hold</button>
+        <button class="reject" data-action="Reject" data-resume="${c.resume_id}">Reject</button>
+        <button class="ai-summary-btn" data-summary="${c.resume_id}">✨ AI summary</button>
+        ${prevAction}
+      </div>
+    </div>
+  `;
+}
+
+async function loadAiSummary(jobId, resumeId) {
+  const box = document.getElementById(`aiSummary-${resumeId}`);
+  box.innerHTML = `<div class="ai-summary-text loading">Generating summary...</div>`;
+
+  const res = await fetch(`${API}/summary/${jobId}/${resumeId}`);
+  const data = await res.json();
+
+  if (res.ok) {
+    box.innerHTML = `<div class="ai-summary-text"><strong>AI summary:</strong> ${data.summary}</div>`;
+  } else {
+    box.innerHTML = `<div class="ai-summary-text err">${data.error || "Could not generate summary."}</div>`;
+  }
+}
+function showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+
+    toast.className = `toast ${type}`;
+    toast.innerHTML = message;
+    toast.style.display = "block";
+
+    setTimeout(() => {
+        toast.style.display = "none";
+    }, 3000);
+}
+async function submitAction(action, jobId, resumeId) {
+  let reason = "";
+  if (action === "Reject") {
+    reason = prompt("Reason for rejection (required for audit log):") || "";
+    if (!reason) { alert("A reason is required to reject a candidate."); return; }
+  }
+  const res = await fetch(`${API}/action`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      job_id: jobId,
+      resume_id: parseInt(resumeId),
+      action: action,
+      reason: reason,
+      user_alias: loggedInEmployee ? loggedInEmployee.employee_id : "recruiter_1"
+    })
+    
+  });
+  const data = await res.json();
+
+if (res.ok) {
+    showToast(
+        `✅ ${action} successful!<br>Email notification sent to the candidate.`,
+        "success"
+    );
+
+    setTimeout(() => {
+        loadShortlist(jobId);
+    }, 1000);
+}
+else {
+    showToast(
+        `❌ Failed to ${action.toLowerCase()} candidate.`,
+        "error"
+    );
+}
+
+loadShortlist(jobId);
+}
+</script>
+<div id="toast" class="toast"></div>
+</body>
+</html>
