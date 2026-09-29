@@ -6,3 +6,4 @@ google-genai
 scikit-learn
 faker
 python-multipart
+
